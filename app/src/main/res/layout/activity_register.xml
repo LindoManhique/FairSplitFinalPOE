@@ -11,39 +11,35 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Screen title -->
         <TextView
             android:id="@+id/tvTitle"
-            android:text="Create account"
+            android:text="@string/title_register"
             android:textStyle="bold"
             android:textSize="20sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingBottom="4dp" />
 
-        <!-- Short guidance -->
         <TextView
             android:id="@+id/tvSubtitle"
-            android:text="Welcome! Fill in your details below."
+            android:text="@string/register_welcome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp" />
 
-        <!-- Display name -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
-                android:hint="Display name"
+                android:hint="@string/hint_display_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="56dp"
                 android:paddingVertical="12dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,7 +47,7 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
-                android:hint="Email"
+                android:hint="@string/hint_email"
                 android:inputType="textEmailAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -59,7 +55,6 @@
                 android:paddingVertical="12dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Password -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -68,7 +63,7 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
-                android:hint="Password"
+                android:hint="@string/hint_password"
                 android:inputType="textPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -76,20 +71,18 @@
                 android:paddingVertical="12dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Create account -->
         <Button
             android:id="@+id/btnRegister"
-            android:text="Create account"
+            android:text="@string/btn_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:paddingVertical="12dp"
             android:layout_marginTop="12dp" />
 
-        <!-- Link back to login -->
         <TextView
             android:id="@+id/tvGoLogin"
-            android:text="Already have an account? Log in"
+            android:text="@string/already_have_account"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp" />

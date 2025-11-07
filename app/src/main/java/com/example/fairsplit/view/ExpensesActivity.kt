@@ -5,21 +5,18 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.example.fairsplit.R
+import com.example.fairsplit.controller.ExpensesController
 import com.example.fairsplit.databinding.ActivityExpensesBinding
 import com.example.fairsplit.model.dto.Expense
-import com.example.fairsplit.model.remote.FirestoreRepository
 import com.example.fairsplit.util.Nav
 import com.example.fairsplit.util.NavStore
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 import java.util.Locale
 
 class ExpensesActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityExpensesBinding
-    private val repo = FirestoreRepository()
 
     private lateinit var groupId: String
     private lateinit var groupName: String
@@ -27,18 +24,19 @@ class ExpensesActivity : AppCompatActivity() {
     private val items = mutableListOf<Expense>()
     private lateinit var adapter: ArrayAdapter<String>
 
+    private lateinit var ctrl: ExpensesController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityExpensesBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        // From GroupsActivity intent
+        // ---- Read navigation args ----
         groupId = intent.getStringExtra("groupId") ?: ""
-        groupName = intent.getStringExtra("groupName") ?: "Expenses"
-        b.tvScreenTitle.text = "Expenses — $groupName"
+        groupName = intent.getStringExtra("groupName") ?: getString(R.string.title_expenses)
+        b.tvScreenTitle.text = "${getString(R.string.title_expenses)} — $groupName"
 
-        // ---------- Bottom nav wiring (select Expenses tab) ----------
-        // Remember this as last open group so tabs from other screens know where to go
+        // ---- Bottom nav (select Expenses tab) ----
         NavStore.saveLastGroup(this, groupId, groupName)
         Nav.setup(
             activity = this,
@@ -47,74 +45,109 @@ class ExpensesActivity : AppCompatActivity() {
             groupId = groupId,
             groupName = groupName
         )
-        // -------------------------------------------------------------
 
-        // Simple list adapter
+        // ---- List adapter ----
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         b.listExpenses.adapter = adapter
 
-        // Add expense
+        // ---- Controller (live updates) ----
+        ctrl = ExpensesController(ui = { action ->
+            when (action) {
+                is ExpensesController.Action.Loading -> setLoading(action.on)
+
+                is ExpensesController.Action.Error ->
+                    toast(action.msg)
+
+                is ExpensesController.Action.Items -> {
+                    items.clear()
+                    items.addAll(action.items)
+                    refreshAdapter()
+                }
+
+                is ExpensesController.Action.Added -> {
+                    items.add(0, action.item)
+                    refreshAdapter()
+                }
+
+                is ExpensesController.Action.Removed -> {
+                    val idx = items.indexOfFirst { it.id == action.id }
+                    if (idx >= 0) {
+                        items.removeAt(idx)
+                        refreshAdapter()
+                    }
+                }
+            }
+        })
+
+        // ---- Add expense ----
         b.btnAdd.setOnClickListener {
             val title = b.etTitle.text?.toString()?.trim().orEmpty()
             val amountText = b.etAmount.text?.toString()?.trim().orEmpty()
-            val amount = amountText.toDoubleOrNull()
+            val amountParsed = amountText.toDoubleOrNull()
 
             var invalid = false
-            if (title.isEmpty()) { b.etTitle.error = "Enter a title"; invalid = true }
-            if (amount == null || amount <= 0.0) { b.etAmount.error = "Enter a valid amount"; invalid = true }
+            if (title.isEmpty()) { b.etTitle.error = getString(R.string.error_title_required); invalid = true }
+            if (amountParsed == null || amountParsed <= 0.0) { b.etAmount.error = getString(R.string.error_amount_required); invalid = true }
             if (invalid) return@setOnClickListener
 
-            val amt = amount!!
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            val e = Expense(title = title, amount = amt, payerUid = uid, participants = listOf(uid))
+            val amt = amountParsed!!   // safe due to validation
 
-            // Optimistic insert
-            items.add(0, e); refreshAdapter()
+            val e = Expense(
+                id = "",                           // repo will assign real id
+                groupId = groupId,
+                title = title,
+                amount = amt,                      // non-null Double
+                payerUid = uid,
+                participants = listOf(uid)
+            )
 
-            // Real write
-            setLoading(true)
-            lifecycleScope.launch {
-                try { repo.addExpense(groupId, e); toast("Expense added") }
-                catch (_: Exception) { toast("Could not add (offline?) — will resync") }
-                finally { setLoading(false) }
-            }
+            // Controller handles optimistic UI + background save
+            ctrl.add(groupId, e)
 
-            // Clear
-            b.etTitle.setText(""); b.etAmount.setText("")
+            // Clear inputs
+            b.etTitle.setText("")
+            b.etAmount.setText("")
         }
 
-        // Long-press delete
+        // ---- Long-press delete ----
         b.listExpenses.setOnItemLongClickListener { _, _, position, _ ->
-            val toDelete = items[position]
-            items.removeAt(position); refreshAdapter()
-            lifecycleScope.launch {
-                val ok = repo.deleteExpense(groupId, toDelete.id)
-                if (!ok) toast("Could not delete (offline?) — will resync")
+            val toDelete = items.getOrNull(position) ?: return@setOnItemLongClickListener true
+            val id = toDelete.id
+            if (id.isNullOrBlank()) {
+                toast(getString(R.string.msg_syncing_please_wait))
+                return@setOnItemLongClickListener true
             }
+            ctrl.delete(groupId, id)
             true
         }
     }
 
+    // Start/stop live listener so screen stays in sync
     override fun onStart() {
         super.onStart()
-        setLoading(true)
-        lifecycleScope.launch {
-            try {
-                val list = repo.listExpenses(groupId)  // server then cache
-                items.clear(); items.addAll(list); refreshAdapter()
-            } finally {
-                setLoading(false)
-            }
-        }
+        ctrl.watch(groupId)
     }
 
-    // Helpers
+    override fun onStop() {
+        super.onStop()
+        ctrl.unwatch()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ctrl.clear()
+    }
+
+    // ---------- Helpers ----------
     private fun refreshAdapter() {
         val rows = items.map { exp ->
             val amt = String.format(Locale.getDefault(), "R %.2f", exp.amount)
             "${exp.title} — $amt"
         }
-        adapter.clear(); adapter.addAll(rows); adapter.notifyDataSetChanged()
+        adapter.clear()
+        adapter.addAll(rows)
+        adapter.notifyDataSetChanged()
     }
 
     private fun setLoading(on: Boolean) {

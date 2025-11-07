@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">FairSplit</string>
+
+    <!-- Titles -->
+    <string name="title_home">Tuis</string>
+    <string name="title_login">Teken aan</string>
+    <string name="title_register">Skep rekening</string>
+    <string name="title_groups">Groepe</string>
+    <string name="title_expenses">Uitgawes</string>
+    <string name="title_settings">Instellings</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Welkom by FairSplit&#10;Teken hieronder aan.&#10;Nuut hier? Tik "Skep rekening" om te registreer.</string>
+    <string name="forgot_password_q">Wagwoord vergeet?</string>
+
+    <!-- Validation / Errors -->
+    <string name="error_title_required">Voer n titel in</string>
+    <string name="error_amount_required">Voer n geldige bedrag in</string>
+    <string name="msg_syncing_please_wait">Sinkroniseer… wag asseblief</string>
+
+    <!-- Hints / Labels -->
+    <string name="hint_email">E-pos</string>
+    <string name="hint_password">Wagwoord</string>
+    <string name="hint_display_name">Vertoonnaam</string>
+    <string name="label_currency">Geldeenheid (bv. ZAR)</string>
+    <string name="label_language">Taal</string>
+    <string name="hint_group_name">Groepnaam</string>
+    <string name="hint_title">Titel</string>
+    <string name="hint_amount">Bedrag</string>
+
+    <!-- Buttons -->
+    <string name="register_welcome">Welkom! Vul jou besonderhede hieronder in.</string>
+    <string name="btn_add_expense">Voeg uitgawe by</string>
+    <string name="btn_login">Teken aan</string>
+    <string name="btn_register">Skep rekening</string>
+    <string name="btn_google">Gaan voort met Google</string>
+    <string name="btn_save">Stoor</string>
+    <string name="btn_fetch_rate">Kry wisselkoers</string>
+    <string name="btn_create_group">Skep groep</string>
+    <string name="btn_demo_group">+ Skep demogroep</string>
+    <string name="btn_demo_expense">+ Voeg demo-uitgawe by</string>
+    <string name="btn_open_settings">Maak instellings oop</string>
+    <string name="btn_add">Voeg by</string>
+
+    <!-- Misc -->
+    <string name="welcome_generic">Welkom!</string>
+    <string name="already_have_account">Het jy reeds n rekening? Teken aan</string>
+    <string name="rate_placeholder">1 ZAR = ? USD</string>
+    <string name="label_logout">Teken uit</string>
+    <string name="hello_world">Hallo Wêreld!</string>
+    <string name="msg_saved">Suksesvol gestoor</string>
+
+    <!-- Offline -->
+    <string name="msg_offline_mode">Aflyn modus</string>
+    <string name="msg_offline_on">Aflyn modus geaktiveer</string>
+    <string name="msg_offline_off">Aanlyn modus geaktiveer</string>
+
+    <!-- Language names (UI labels) -->
+    <string name="lang_en">Engels</string>
+    <string name="lang_af">Afrikaans</string>
+</resources>

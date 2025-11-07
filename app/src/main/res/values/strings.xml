@@ -1,3 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">FairSplit</string>
+
+    <!-- Titles -->
+    <string name="title_home">Home</string>
+    <string name="title_login">Login</string>
+    <string name="title_register">Create account</string>
+    <string name="title_groups">Groups</string>
+    <string name="title_expenses">Expenses</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Welcome to FairSplit 👋
+Log in below.
+New here? Tap "Create account" to register.</string>
+    <string name="forgot_password_q">Forgot password?</string>
+
+    <!-- Validation / Errors (defined in zz_lib_overrides.xml) -->
+    <string name="msg_syncing_please_wait">Syncing… please wait</string>
+
+    <!-- Hints / Labels -->
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_display_name">Display name</string>
+    <string name="label_currency">Currency (e.g., ZAR)</string>
+    <string name="label_language">Language</string>
+    <string name="hint_group_name">Group name</string>
+    <string name="hint_title">Title</string>
+    <string name="hint_amount">Amount</string>
+
+    <!-- Buttons -->
+    <string name="register_welcome">Welcome! Fill in your details below.</string>
+    <string name="btn_add_expense">Add expense</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Create account</string>
+    <string name="btn_google">Continue with Google</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_fetch_rate">Fetch ZAR ➔ USD</string>
+    <string name="btn_create_group">Create group</string>
+    <string name="btn_demo_group">+ Create demo group</string>
+    <string name="btn_demo_expense">+ Add demo expense</string>
+    <string name="btn_open_settings">Open Settings</string>
+    <string name="btn_add">Add</string>
+
+    <!-- Misc -->
+    <string name="welcome_generic">Welcome!</string>
+    <string name="rate_placeholder">1 ZAR = ? USD</string>
+    <string name="label_logout">Logout</string>
+    <string name="hello_world">Hello World!</string>
+    <string name="msg_saved">Saved</string>
+
+    <!-- Offline -->
+    <string name="msg_offline_mode">Offline mode</string>
+    <string name="msg_offline_on">Offline mode is ON</string>
+    <string name="msg_offline_off">Offline mode is OFF</string>
+
+    <!-- Language names -->
+    <string name="lang_en">English</string>
+    <string name="lang_af">Afrikaans</string>
 </resources>

@@ -2,13 +2,14 @@ package com.example.fairsplit.controller
 
 import com.example.fairsplit.model.dto.Expense
 import com.example.fairsplit.model.remote.FirestoreRepository
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.*
 
 class ExpensesController(
     private val ui: (Action) -> Unit,
     private val repo: FirestoreRepository = FirestoreRepository()
 ) {
-    // UI messages to the Activity
+    // Messages sent back to the Activity/Fragment
     sealed class Action {
         data class Loading(val on: Boolean) : Action()
         data class Error(val msg: String) : Action()
@@ -17,15 +18,17 @@ class ExpensesController(
         data class Removed(val id: String) : Action()
     }
 
-    private val main = CoroutineScope(Dispatchers.Main)
-    private val TIMEOUT = 20_000L
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var listener: ListenerRegistration? = null
 
-    /** Load all expenses for a group */
+    companion object { private const val TIMEOUT_MS = 20_000L }
+
+    // ---------------- One-shot load (manual refresh) ----------------
     fun load(groupId: String) {
-        main.launch {
+        scope.launch {
             ui(Action.Loading(true))
             try {
-                val items = withTimeout(TIMEOUT) {
+                val items = withTimeout(TIMEOUT_MS) {
                     withContext(Dispatchers.IO) { repo.listExpenses(groupId) }
                 }
                 ui(Action.Items(items))
@@ -39,49 +42,59 @@ class ExpensesController(
         }
     }
 
-    /**
-     * Add an expense with *optimistic UI*:
-     * - show it immediately
-     * - turn spinner OFF immediately
-     * - save + refresh in the background (no spinner)
-     */
+    // ---------------- Live updates ----------------
+    /** Start listening for changes; call unwatch() in onStop/onDestroy. */
+    fun watch(groupId: String) {
+        unwatch()
+        ui(Action.Loading(true))
+        listener = repo.listenExpenses(
+            groupId = groupId,
+            onChange = { items ->
+                ui(Action.Items(items))
+                ui(Action.Loading(false))
+            },
+            onError = { msg ->
+                ui(Action.Error(msg))
+                ui(Action.Loading(false))
+            }
+        )
+        // optional initial fetch
+        load(groupId)
+    }
+
+    /** Stop listening to Firestore changes. */
+    fun unwatch() {
+        listener?.remove()
+        listener = null
+    }
+
+    // ---------------- Add (optimistic) ----------------
     fun add(groupId: String, expense: Expense) {
-        main.launch {
-            // Optimistic UI now
+        scope.launch {
+            // Optimistic UI
             ui(Action.Loading(true))
             ui(Action.Added(expense))
-            ui(Action.Loading(false))   // IMPORTANT: stop spinner right away
+            ui(Action.Loading(false)) // stop spinner immediately
 
-            // Background save + refresh (no spinner)
+            // Background save + best-effort refresh
             launch(Dispatchers.IO) {
-                // Save (timeout quietly if slow/offline)
-                withTimeoutOrNull(TIMEOUT) {
-                    repo.addExpense(groupId, expense)
-                }
-
-                // Refresh list (keep current list if it fails)
-                val fresh = runCatching { repo.listExpenses(groupId) }
-                    .getOrElse { emptyList() }
-
-                withContext(Dispatchers.Main) {
-                    if (fresh.isNotEmpty()) ui(Action.Items(fresh))
-                    // No loading toggle here; we already hid it
-                }
+                withTimeoutOrNull(TIMEOUT_MS) { repo.addExpense(groupId, expense) }
+                val fresh = runCatching { repo.listExpenses(groupId) }.getOrElse { emptyList() }
+                withContext(Dispatchers.Main) { if (fresh.isNotEmpty()) ui(Action.Items(fresh)) }
             }
         }
     }
 
-    /** Delete an expense (with confirmation handled in Activity) */
+    // ---------------- Delete ----------------
     fun delete(groupId: String, expenseId: String) {
-        main.launch {
+        scope.launch {
             ui(Action.Loading(true))
             try {
                 withContext(Dispatchers.IO) {
-                    withTimeoutOrNull(TIMEOUT) { repo.deleteExpense(groupId, expenseId) }
+                    withTimeoutOrNull(TIMEOUT_MS) { repo.deleteExpense(groupId, expenseId) }
                 }
                 ui(Action.Removed(expenseId))
 
-                // Refresh after delete
                 val fresh = withContext(Dispatchers.IO) {
                     runCatching { repo.listExpenses(groupId) }.getOrElse { emptyList() }
                 }
@@ -92,5 +105,11 @@ class ExpensesController(
                 ui(Action.Loading(false))
             }
         }
+    }
+
+    // ---------------- Lifecycle cleanup ----------------
+    fun clear() {
+        unwatch()
+        scope.cancel()
     }
 }

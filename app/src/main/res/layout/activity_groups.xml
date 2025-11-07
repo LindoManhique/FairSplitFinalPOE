@@ -8,25 +8,30 @@
     android:padding="16dp"
     android:background="@color/blue_surface">
 
-    <!-- Screen title -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/swOffline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_offline_mode"
+        android:layout_margin="12dp"
+        app:useMaterialThemeColors="true"/>
+
     <TextView
         android:id="@+id/tvScreenTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Groups"
+        android:text="@string/title_groups"
         android:textStyle="bold"
         android:textSize="20sp"
         android:paddingBottom="4dp" />
 
-    <!-- Friendly greeting / username placeholder -->
     <TextView
         android:id="@+id/tvUserName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Welcome!"
+        android:text="@string/welcome_generic"
         android:layout_marginBottom="12dp" />
 
-    <!-- Enter a group name -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -35,27 +40,25 @@
             android:id="@+id/etGroupName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Group name"
+            android:hint="@string/hint_group_name"
             android:minHeight="56dp"
             android:paddingVertical="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Create from input -->
     <Button
         android:id="@+id/btnCreateGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create group"
+        android:text="@string/btn_create_group"
         android:minHeight="48dp"
         android:paddingVertical="12dp"
         android:layout_marginTop="8dp" />
 
-    <!-- Demo helpers -->
     <Button
         android:id="@+id/btnAddGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="+ Create demo group"
+        android:text="@string/btn_demo_group"
         android:minHeight="48dp"
         android:paddingVertical="12dp"
         android:layout_marginTop="8dp" />
@@ -64,22 +67,20 @@
         android:id="@+id/btnAddExpense"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="+ Add demo expense"
+        android:text="@string/btn_demo_expense"
         android:minHeight="48dp"
         android:paddingVertical="12dp"
         android:layout_marginTop="8dp" />
 
-    <!-- Open Settings -->
     <Button
         android:id="@+id/btnOpenSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Open Settings"
+        android:text="@string/btn_open_settings"
         android:minHeight="48dp"
         android:paddingVertical="12dp"
         android:layout_marginTop="8dp" />
 
-    <!-- List of groups -->
     <ListView
         android:id="@+id/listGroups"
         android:layout_width="match_parent"
@@ -87,7 +88,6 @@
         android:layout_weight="1"
         android:layout_marginTop="12dp" />
 
-    <!-- Loading spinner (default hidden) -->
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="wrap_content"
@@ -96,7 +96,6 @@
         android:layout_marginTop="8dp"
         android:layout_gravity="center_horizontal" />
 
-    <!-- Bottom navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"

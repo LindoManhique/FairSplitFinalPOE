@@ -8,4 +8,6 @@
     <color name="blue_on_secondary">#003247</color>
     <color name="blue_surface">#F7FBFF</color>        <!-- page bg -->
     <color name="blue_on_surface">#0B2B4A</color>     <!-- text -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
 </resources>

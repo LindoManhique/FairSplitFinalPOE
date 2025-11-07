@@ -4,11 +4,11 @@
 
     <item
         android:id="@+id/action_settings"
-        android:title="Settings"
+        android:title="@string/title_settings"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_logout"
-        android:title="Logout"
+        android:title="@string/label_logout"
         app:showAsAction="never" />
 </menu>

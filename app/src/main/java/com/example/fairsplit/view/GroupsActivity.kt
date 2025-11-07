@@ -20,6 +20,7 @@ import com.example.fairsplit.model.remote.FirestoreRepository
 import com.example.fairsplit.util.Nav
 import com.example.fairsplit.util.NavStore
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 class GroupsActivity : AppCompatActivity() {
@@ -28,6 +29,7 @@ class GroupsActivity : AppCompatActivity() {
     private lateinit var groupsCtrl: GroupsController
     private lateinit var expensesCtrl: ExpensesController
     private val repo = FirestoreRepository()
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     private var groups: List<Group> = emptyList()
     private var lastCreatedGroupId: String? = null
@@ -37,7 +39,7 @@ class GroupsActivity : AppCompatActivity() {
         binding = ActivityGroupsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.tvScreenTitle.text = "Groups"
+        binding.tvScreenTitle.text = getString(R.string.title_groups)
 
         // ---------- Bottom nav wiring (select Groups tab) ----------
         val (gid, gname) = NavStore.lastGroup(this)
@@ -65,7 +67,8 @@ class GroupsActivity : AppCompatActivity() {
             val profile = repo.getUserProfile()
             val localName = prefsDisplayName()
             val fallback = FirebaseAuth.getInstance().currentUser?.email ?: "User"
-            binding.tvUserName.text = "Welcome, ${localName ?: profile?.displayName ?: fallback}"
+            binding.tvUserName.text =
+                getString(R.string.welcome_generic) + ", " + (localName ?: profile?.displayName ?: fallback)
         }
 
         // ---------- Controllers ----------
@@ -104,9 +107,8 @@ class GroupsActivity : AppCompatActivity() {
                         binding.etGroupName.text?.clear()
                     }
 
-                    // === NEW: handle optimistic deletion ===
+                    // Handle optimistic deletion
                     is GroupsController.Action.Deleted -> {
-                        // Remove locally
                         groups = groups.filterNot { it.id == action.groupId }
                         val names = groups.map { it.name }
                         val existing = binding.listGroups.adapter as? ArrayAdapter<String>
@@ -117,16 +119,14 @@ class GroupsActivity : AppCompatActivity() {
                                 ArrayAdapter(this, android.R.layout.simple_list_item_1, names)
                         }
 
-                        // Clear "last group" if it was this one
                         val (lastId, _) = NavStore.lastGroup(this)
                         if (lastId == action.groupId) {
                             NavStore.saveLastGroup(this, "", "")
                         }
 
-                        // Toast + immediate refresh
                         Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show()
-                        groupsCtrl.loadMyGroups() // fast refresh
-                        setLoading(false) // make 100% sure spinner is off
+                        groupsCtrl.loadMyGroups()
+                        setLoading(false)
                     }
                 }
             },
@@ -147,6 +147,35 @@ class GroupsActivity : AppCompatActivity() {
         )
         // ---------------------------------
 
+        // Offline/Online toggle demo (uses enableNetwork/disableNetwork)
+        // Works at runtime; doesn’t fight persistence settings.
+        binding.swOffline?.let { sw ->
+            // Optional: remember last choice
+            val p = getSharedPreferences("demo", MODE_PRIVATE)
+            val wasOffline = p.getBoolean("offline", false)
+            sw.isChecked = wasOffline
+
+            // Apply initial state
+            if (wasOffline) {
+                db.disableNetwork()
+            } else {
+                db.enableNetwork()
+            }
+
+            sw.setOnCheckedChangeListener { _, isChecked ->
+                p.edit().putBoolean("offline", isChecked).apply()
+                if (isChecked) {
+                    db.disableNetwork().addOnCompleteListener {
+                        Toast.makeText(this, getString(R.string.msg_offline_on), Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    db.enableNetwork().addOnCompleteListener {
+                        Toast.makeText(this, getString(R.string.msg_offline_off), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
         binding.btnOpenSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -154,7 +183,7 @@ class GroupsActivity : AppCompatActivity() {
         binding.btnCreateGroup.setOnClickListener {
             val name = binding.etGroupName.text.toString().trim()
             if (name.isEmpty()) {
-                binding.etGroupName.error = "Enter a group name"
+                binding.etGroupName.error = getString(R.string.error_title_required)
             } else {
                 groupsCtrl.createGroup(name)
             }
@@ -171,13 +200,17 @@ class GroupsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            val e = Expense(title = "Demo Lunch", amount = 150.0, payerUid = uid, participants = listOf(uid))
+            val e = Expense(
+                title = "Demo Lunch",
+                amount = 150.0,
+                payerUid = uid,
+                participants = listOf(uid)
+            )
             expensesCtrl.add(gid2, e)
         }
 
         binding.listGroups.setOnItemClickListener { _, _, position, _ ->
             val g = groups[position]
-            // Save last group before navigating
             NavStore.saveLastGroup(this, g.id, g.name)
             startActivity(
                 Intent(this, ExpensesActivity::class.java)
@@ -186,16 +219,14 @@ class GroupsActivity : AppCompatActivity() {
             )
         }
 
-        // Long-press to delete a group (confirm first)
+        // Long-press delete with confirm dialog
         binding.listGroups.setOnItemLongClickListener { _, _, position, _ ->
             val g = groups.getOrNull(position) ?: return@setOnItemLongClickListener true
             AlertDialog.Builder(this)
                 .setTitle("Delete group")
                 .setMessage("Are you sure you want to delete “${g.name}”? This cannot be undone.")
                 .setNegativeButton("Cancel", null)
-                .setPositiveButton("Delete") { _, _ ->
-                    groupsCtrl.deleteGroup(g) // optimistic: toast + refresh handled in UI actions
-                }
+                .setPositiveButton("Delete") { _, _ -> groupsCtrl.deleteGroup(g) }
                 .show()
             true
         }
@@ -208,7 +239,8 @@ class GroupsActivity : AppCompatActivity() {
             val profile = repo.getUserProfile()
             val localName = prefsDisplayName()
             val fallback = FirebaseAuth.getInstance().currentUser?.email ?: "User"
-            binding.tvUserName.text = "Welcome, ${localName ?: profile?.displayName ?: fallback}"
+            binding.tvUserName.text =
+                getString(R.string.welcome_generic) + ", " + (localName ?: profile?.displayName ?: fallback)
         }
         groupsCtrl.loadMyGroups()
     }

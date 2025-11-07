@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- These names match the buggy library keys; app resources override libs -->
+    <string name="already_have_account">Already have an account? Log in</string>
+    <string name="error_amount_required">Enter a valid amount</string>
+    <string name="error_title_required">Enter a title</string>
+</resources>

@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Content (scrolls) -->
     <ScrollView
         android:id="@+id/scroll"
         android:layout_width="0dp"
@@ -22,31 +21,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- PAGE TITLE -->
             <TextView
                 android:id="@+id/tvTitle"
-                android:text="Settings"
+                android:text="@string/title_settings"
                 android:textStyle="bold"
                 android:textSize="20sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Display name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etDisplayName"
-                    android:hint="Display name"
+                    android:hint="@string/hint_display_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="56dp"
                     android:paddingVertical="12dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Currency code -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -54,37 +50,58 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCurrencyCode"
-                    android:hint="Currency (e.g., ZAR)"
+                    android:hint="@string/label_currency"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="56dp"
                     android:paddingVertical="12dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Save -->
+            <TextView
+                android:id="@+id/tvLanguageLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_language"
+                android:layout_marginTop="16dp"/>
+
+            <Spinner
+                android:id="@+id/spLanguage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dropdown"
+                android:entries="@array/language_names"
+                android:layout_marginBottom="8dp"/>
+
             <Button
                 android:id="@+id/btnSave"
-                android:text="Save"
+                android:text="@string/btn_save"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="48dp"
                 android:paddingVertical="12dp"
                 android:layout_marginTop="12dp" />
 
-            <!-- Fetch rate -->
             <Button
                 android:id="@+id/btnFetchRates"
-                android:text="Fetch ZAR → USD"
+                android:text="@string/btn_fetch_rate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="48dp"
                 android:paddingVertical="12dp"
                 android:layout_marginTop="8dp" />
 
-            <!-- Result text -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/swOffline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/msg_offline_mode"
+                android:checked="false"
+                android:layout_marginTop="16dp"
+                android:textColor="@android:color/white"/>
+
             <TextView
                 android:id="@+id/tvRate"
-                android:text="1 ZAR = ? USD"
+                android:text="@string/rate_placeholder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp" />

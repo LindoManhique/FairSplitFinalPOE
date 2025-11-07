@@ -8,6 +8,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -17,13 +19,15 @@ class FirestoreRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     init {
-        // Enable offline cache (safe if called more than once)
+        // Offline cache (idempotent — safe if set multiple times)
         try {
             val settings = FirebaseFirestoreSettings.Builder()
                 .setPersistenceEnabled(true)
                 .build()
             if (db.firestoreSettings != settings) db.firestoreSettings = settings
-        } catch (_: Exception) { /* already set */ }
+        } catch (_: Exception) {
+            // Already configured — ignore
+        }
     }
 
     private fun users() = db.collection("users")
@@ -66,11 +70,19 @@ class FirestoreRepository(
         val uid = currentUid()
         if (uid.isBlank()) return emptyList()
         return try {
-            groups().whereArrayContains("members", uid).get(Source.SERVER).await()
+            groups()
+                .whereArrayContains("members", uid)
+                .orderBy("name", Query.Direction.ASCENDING)
+                .get(Source.SERVER)
+                .await()
                 .documents.mapNotNull { it.toObject(Group::class.java) }
         } catch (e: Exception) {
             Log.w("FirestoreRepo", "myGroups server failed: ${e.message}; using cache")
-            groups().whereArrayContains("members", uid).get(Source.CACHE).await()
+            groups()
+                .whereArrayContains("members", uid)
+                .orderBy("name", Query.Direction.ASCENDING)
+                .get(Source.CACHE)
+                .await()
                 .documents.mapNotNull { it.toObject(Group::class.java) }
         }
     }
@@ -83,26 +95,26 @@ class FirestoreRepository(
             .await()
     }
 
-    /** NEW: Delete a group and its expenses (best-effort cascade). */
+    /** Delete a group and best-effort delete its expenses first. */
     suspend fun deleteGroup(groupId: String) {
-        // Delete subcollection 'expenses' first (best effort), then the group doc.
         try {
-            val docs = expenses(groupId).get(Source.SERVER).await().documents
-            // If server fails (offline), attempt cache:
-            val toDelete = if (docs.isNotEmpty()) docs else runCatching {
-                expenses(groupId).get(Source.CACHE).await().documents
-            }.getOrDefault(emptyList())
+            val serverDocs = runCatching {
+                expenses(groupId).get(Source.SERVER).await().documents
+            }.getOrNull()
 
-            // Firestore doesn't support true batched subcollection deletes cross-collection in one atomic op,
-            // so we do sequential deletes. This is fine for a student app / small lists.
+            val toDelete = when {
+                serverDocs != null && serverDocs.isNotEmpty() -> serverDocs
+                else -> runCatching { expenses(groupId).get(Source.CACHE).await().documents }
+                    .getOrDefault(emptyList())
+            }
+
             for (d in toDelete) {
                 expenses(groupId).document(d.id).delete().await()
             }
         } catch (e: Exception) {
-            Log.w("FirestoreRepo", "deleteGroup: failed to list/delete expenses: ${e.message} — continuing")
+            Log.w("FirestoreRepo", "deleteGroup: could not delete sub-collection: ${e.message}")
         }
 
-        // Finally delete the group document
         groups().document(groupId).delete().await()
     }
 
@@ -115,19 +127,25 @@ class FirestoreRepository(
         return toSave
     }
 
-    /** Prefer SERVER, else CACHE. Safe if offline. */
+    /** Prefer SERVER, else CACHE. Safe when offline. */
     suspend fun listExpenses(groupId: String): List<Expense> {
         return try {
-            expenses(groupId).get(Source.SERVER).await()
+            expenses(groupId)
+                .orderBy("date", Query.Direction.DESCENDING)
+                .get(Source.SERVER)
+                .await()
                 .documents.mapNotNull { it.toObject(Expense::class.java) }
         } catch (e: Exception) {
             Log.w("FirestoreRepo", "listExpenses server failed: ${e.message}; using cache")
-            expenses(groupId).get(Source.CACHE).await()
+            expenses(groupId)
+                .orderBy("date", Query.Direction.DESCENDING)
+                .get(Source.CACHE)
+                .await()
                 .documents.mapNotNull { it.toObject(Expense::class.java) }
         }
     }
 
-    /** Delete an expense; returns true on success, false otherwise. */
+    /** Delete a single expense. */
     suspend fun deleteExpense(groupId: String, expenseId: String): Boolean {
         return try {
             expenses(groupId).document(expenseId).delete().await()
@@ -136,5 +154,38 @@ class FirestoreRepository(
             Log.w("FirestoreRepo", "deleteExpense failed: ${e.message}")
             false
         }
+    }
+
+    // ------------------ LIVE LISTENERS ------------------
+
+    /**
+     * Live listener for expenses. Keep the returned registration and call remove() to stop.
+     */
+    fun listenExpenses(
+        groupId: String,
+        onChange: (List<Expense>) -> Unit,
+        onError: (String) -> Unit
+    ): ListenerRegistration {
+        return expenses(groupId)
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { snap, e ->
+                if (e != null) {
+                    onError(e.localizedMessage ?: "Listen failed")
+                    return@addSnapshotListener
+                }
+                val items = snap?.documents?.mapNotNull { it.toObject(Expense::class.java) }
+                    ?: emptyList()
+                onChange(items)
+            }
+    }
+
+    // ------------------ OFFLINE TOGGLES (for your demo) ------------------
+
+    suspend fun goOffline() {
+        db.disableNetwork().await()
+    }
+
+    suspend fun goOnline() {
+        db.enableNetwork().await()
     }
 }

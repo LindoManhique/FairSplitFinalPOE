@@ -8,17 +8,15 @@
     android:padding="16dp"
     android:background="@color/blue_surface">
 
-    <!-- Screen title -->
     <TextView
         android:id="@+id/tvScreenTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Expenses"
+        android:text="@string/title_expenses"
         android:textSize="20sp"
         android:textStyle="bold"
         android:paddingBottom="8dp" />
 
-    <!-- Progress spinner -->
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="wrap_content"
@@ -40,7 +38,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:hint="Title"
+            android:hint="@string/hint_title"
             android:minHeight="48dp"
             android:paddingLeft="12dp"
             android:paddingRight="12dp" />
@@ -50,7 +48,7 @@
             android:layout_width="96dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
-            android:hint="Amount"
+            android:hint="@string/hint_amount"
             android:inputType="numberDecimal"
             android:minHeight="48dp"
             android:paddingLeft="12dp"
@@ -61,10 +59,9 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
-            android:text="Add" />
+            android:text="@string/btn_add" />
     </LinearLayout>
 
-    <!-- List -->
     <ListView
         android:id="@+id/listExpenses"
         android:layout_width="match_parent"
@@ -72,7 +69,6 @@
         android:layout_weight="1"
         android:dividerHeight="8dp" />
 
-    <!-- Bottom navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"

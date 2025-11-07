@@ -12,7 +12,20 @@
           "package_name": "com.example.fairsplit"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "470149951-294gtgrs268kkf2g87dbqbuku905goiq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fairsplit",
+            "certificate_hash": "ea50610e30676b08007aec621d1bfb39c44a02a9"
+          }
+        },
+        {
+          "client_id": "470149951-gdf28kl1k68mlujia8be7snla9qhgm8p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAVSvOtc6nQa77F6AXDIhbdttppsX86974"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "470149951-gdf28kl1k68mlujia8be7snla9qhgm8p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
